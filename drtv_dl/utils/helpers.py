@@ -4,6 +4,10 @@ import html
 import inspect
 import logging
 import requests
+from colorama import Fore, Style, init
+
+if os.name == 'nt':
+    init(autoreset=True)
 
 from drtv_dl.logger import logger
 from drtv_dl.utils import settings
@@ -36,7 +40,11 @@ def print_to_screen(message, level='info'):
     else:
         identifier = module_name
     log_level = getattr(logging, level.upper(), logging.INFO)
-    logger.log(log_level, message, extra={'module_class': identifier})
+    if level.lower() == 'warning':
+        formatted_message = f"{Fore.YELLOW}WARNING:{Style.RESET_ALL} {message}"
+    else:
+        formatted_message = message
+    logger.log(log_level, formatted_message, extra={'module_class': identifier})
 
 def search_content(pattern, text, group_num=1):
     if isinstance(pattern, str):
@@ -142,14 +150,14 @@ def print_formats(formats):
         for item in formats.get(category, []):
             if category == 'audio':
                 row = [f"audio_{item['group-id']}-{item['name']}-{item['language']}", ext, "n/a", "audio only", 
-                       "n/a", "n/a", "audio only", f"[{item['language']}] {item['name']}", "m3u8"]
+                       "n/a", "n/a", "audio only", item['codec'], "m3u8"]
             elif category == 'subtitles':
                 row = [f"subs_{item['name']}-{item['language']}", ext, "n/a", "subtitles", 
-                       "n/a", "n/a", "sub only", f"[{item['language']}] {item['name']}", "m3u8"]
+                       "n/a", "n/a", "sub only", f"n/a", "m3u8"]
             else:  # video
                 row = [f"video_{item['bandwidth']}", ext, item['frame-rate'], item['resolution'], 
                        f"{int(item['bandwidth']) // 1000}k", f"{int(item['average-bandwidth']) // 1000}k", 
-                       item['codecs'].split(",")[0], "video only", "m3u8"]
+                       item['codec'], "n/a", "m3u8"]
             data_rows.append(row)
 
     column_widths = [max(len(str(item)) for item in col) for col in zip(*data_rows)]

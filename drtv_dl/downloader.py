@@ -87,7 +87,9 @@ class DRTVDownloader:
         response = requests.get(url, stream=True, proxies=settings.PROXY)
         response.raise_for_status()
         
-        initial_size = int(response.headers.get('content-length', None))
+        initial_size = int(response.headers.get('content-length', "?"))
+        if initial_size == "?":
+            print_to_screen(f"Could not get content length - setting to '?'", level='warning')
         progress_tracker = ProgressTracker(initial_size, filename)
         
         print_to_screen(f"Destination: {filename}")

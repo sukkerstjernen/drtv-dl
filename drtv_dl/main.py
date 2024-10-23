@@ -11,7 +11,7 @@ from drtv_dl.utils.helpers import (
     is_valid_drtv_url,
 )
 
-def download(url, resolution="360p", include_subs=False, ntmpl=None, proxy=None, list_formats=False, suppress_output=False):
+def download(url, resolution="1080p", include_subs=False, ntmpl=None, proxy=None, list_formats=False, suppress_output=False):
     if not is_valid_drtv_url(url):
         raise InvalidURLError("URL was not found to be valid")
     

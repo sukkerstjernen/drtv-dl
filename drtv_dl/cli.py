@@ -7,7 +7,7 @@ from drtv_dl.exceptions import DRTVDownloaderError
 def parse_args():
     parser = argparse.ArgumentParser(description="Download videos from DR TV")
     parser.add_argument("url", help="URL of the video to download")
-    parser.add_argument("--resolution", default="360p", help="Desired video resolution (e.g., 1080p, 720p)")
+    parser.add_argument("--resolution", default="1080p", help="Desired video resolution (e.g., 1080p, 720p)")
     parser.add_argument("--include-subs", action="store_true", help="Download with subtitles")
     parser.add_argument("--ntmpl", help="User-custom naming template i.e. \"{title} E{episode_number} {year} [{id}]\"")
     parser.add_argument("--proxy", default=None,help="Proxy to use for the download")
