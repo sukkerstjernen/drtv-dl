@@ -5,7 +5,7 @@ import time
 
 class ProgressTracker:
     def __init__(self, initial_size, filename):
-        self.total_size = initial_size
+        self.total_size = int(initial_size) if initial_size != "?" else initial_size
         self.downloaded = 0
         self.filename = filename
         self.start_time = time.time()

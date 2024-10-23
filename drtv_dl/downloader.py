@@ -22,7 +22,7 @@ from drtv_dl.exceptions import (
 )
 
 class DRTVDownloader:
-    def download(self, info, list_formats, resolution, include_subs, ntmpl):
+    def download(self, info, list_formats, resolution, include_subs, ntmpl, cfmt):
         base_filename = generate_filename(info, ntmpl)
 
         stream_url = get_optimal_format(info.get('formats', [])).get('url')
@@ -41,7 +41,7 @@ class DRTVDownloader:
         audio_filename = self._download_stream(optimal_stream['audio'], base_filename, stream_type='audio')
         subtitle_filename = self._download_subtitle(optimal_stream, base_filename, include_subs)
 
-        self._merge_streams(info, video_filename, audio_filename, subtitle_filename, base_filename)
+        self._merge_streams(info, video_filename, audio_filename, subtitle_filename, base_filename, cfmt)
         self._cleanup(video_filename, audio_filename, subtitle_filename)
 
     def _download_stream(self, stream, base_filename, stream_type):
@@ -87,7 +87,7 @@ class DRTVDownloader:
         response = requests.get(url, stream=True, proxies=settings.PROXY)
         response.raise_for_status()
         
-        initial_size = int(response.headers.get('content-length', "?"))
+        initial_size = response.headers.get('content-length', "?")
         if initial_size == "?":
             print_to_screen(f"Could not get content length - setting to '?'", level='warning')
         progress_tracker = ProgressTracker(initial_size, filename)
@@ -103,15 +103,15 @@ class DRTVDownloader:
         print_to_screen(note)
     
     @staticmethod
-    def _merge_streams(info, video_filename, audio_filename, subtitle_filename, base_filename):
-        output_filename = f"{base_filename}.mp4"
-        result = Merger.merge(
+    def _merge_streams(info, video_filename, audio_filename, subtitle_filename, base_filename, cfmt):
+        output_filename = f"{base_filename}.{cfmt}"
+        result = Merger(
             video_filename,
             audio_filename,
             subtitle_filename,
             output_filename,
-            note=f"{info['id']}: Merging streams into {output_filename}"
-        )
+            cfmt=cfmt
+        ).merge(note=f"{info['id']}: Merging streams into {output_filename}")
         if not result:
             raise MergeError(f"Failed to merge streams for {info['id']}")
     
@@ -122,5 +122,3 @@ class DRTVDownloader:
             audio_filename, 
             subtitle_filename
         )
-
-

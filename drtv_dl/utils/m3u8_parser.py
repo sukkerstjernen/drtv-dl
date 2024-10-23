@@ -1,8 +1,9 @@
-# C:\Users\Admin\Desktop\drtv-dl\drtv_dl\utils\m3u8_parser.py
-
-from collections import defaultdict
-from urllib.parse import urljoin, unquote
 import re
+from collections import defaultdict
+from urllib.parse import (
+    urljoin, 
+    unquote
+)
 
 class M3U8Parser:
     def __init__(self, base_uri, m3u8_content):
@@ -38,7 +39,6 @@ class M3U8Parser:
                 self.streams['video'].append(current_stream)
                 current_stream = None
 
-        # Assign audio codecs based on group-id
         for audio_stream in self.streams['audio']:
             group_id = audio_stream.get('group-id')
             audio_stream['codec'] = self.audio_codecs.get(group_id)

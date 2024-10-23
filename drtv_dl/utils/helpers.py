@@ -1,10 +1,16 @@
 import re
 import os
+import sys
 import html
 import inspect
 import logging
 import requests
-from colorama import Fore, Style, init
+import subprocess
+from colorama import (
+    Fore, 
+    Style, 
+    init
+)
 
 if os.name == 'nt':
     init(autoreset=True)
@@ -42,6 +48,8 @@ def print_to_screen(message, level='info'):
     log_level = getattr(logging, level.upper(), logging.INFO)
     if level.lower() == 'warning':
         formatted_message = f"{Fore.YELLOW}WARNING:{Style.RESET_ALL} {message}"
+    elif level.lower() == 'error':
+        formatted_message = f"{Fore.RED}ERROR:{Style.RESET_ALL} {message}"
     else:
         formatted_message = message
     logger.log(log_level, formatted_message, extra={'module_class': identifier})
@@ -153,11 +161,11 @@ def print_formats(formats):
                        "n/a", "n/a", "audio only", item['codec'], "m3u8"]
             elif category == 'subtitles':
                 row = [f"subs_{item['name']}-{item['language']}", ext, "n/a", "subtitles", 
-                       "n/a", "n/a", "sub only", f"n/a", "m3u8"]
+                       "n/a", "n/a", "sub only", f"subs only", "m3u8"]
             else:  # video
                 row = [f"video_{item['bandwidth']}", ext, item['frame-rate'], item['resolution'], 
                        f"{int(item['bandwidth']) // 1000}k", f"{int(item['average-bandwidth']) // 1000}k", 
-                       item['codec'], "n/a", "m3u8"]
+                       item['codec'], "video only", "m3u8"]
             data_rows.append(row)
 
     column_widths = [max(len(str(item)) for item in col) for col in zip(*data_rows)]
@@ -205,3 +213,10 @@ def delete_files(*file_paths):
                 os.remove(file_path)
         except OSError as e:
             logger.error(f"Error deleting {file_path}: {e}")
+
+def is_ffmpeg_accessible():
+    try:
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print_to_screen("FFmpeg is not installed or not in the system PATH.", level='error')
+        sys.exit(1)

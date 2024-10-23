@@ -9,9 +9,13 @@ from drtv_dl.extractor import (
 from drtv_dl.utils.helpers import (
     print_to_screen, 
     is_valid_drtv_url,
+    is_ffmpeg_accessible
 )
 
-def download(url, resolution="1080p", include_subs=False, ntmpl=None, proxy=None, list_formats=False, suppress_output=False):
+
+def download(url, resolution="1080p", include_subs=False, cfmt="mkv", ntmpl=None, proxy=None, list_formats=False, suppress_output=False):
+    is_ffmpeg_accessible()
+
     if not is_valid_drtv_url(url):
         raise InvalidURLError("URL was not found to be valid")
     
@@ -42,7 +46,7 @@ def download(url, resolution="1080p", include_subs=False, ntmpl=None, proxy=None
         for idx, episode_url in enumerate(info['episode_urls'], start=1):
             print_to_screen(f"Processing episode {idx} of {len(info['episode_urls'])}")
             episode_info = ie.extract(episode_url)
-            downloader.download(episode_info, list_formats, resolution=resolution, include_subs=include_subs, ntmpl=ntmpl)
+            downloader.download(episode_info, list_formats, resolution=resolution, include_subs=include_subs, ntmpl=ntmpl, cfmt=cfmt)
     elif isinstance(info, list):
         total_seasons = len(info)
         for season_idx, season in enumerate(info, start=1):
@@ -50,7 +54,7 @@ def download(url, resolution="1080p", include_subs=False, ntmpl=None, proxy=None
             for idx, episode_url in enumerate(season['episode_urls'], start=1):
                 print_to_screen(f"Processing episode {idx} of {len(season['episode_urls'])} in season {season_idx} of {total_seasons}")
                 episode_info = ie.extract(episode_url)
-                downloader.download(episode_info, list_formats, resolution=resolution, include_subs=include_subs, ntmpl=ntmpl)
+                downloader.download(episode_info, list_formats, resolution=resolution, include_subs=include_subs, ntmpl=ntmpl, cfmt=cfmt)
     else:
         print_to_screen("Processing a single item")
-        downloader.download(info, list_formats, resolution=resolution, include_subs=include_subs, ntmpl=ntmpl)
+        downloader.download(info, list_formats, resolution=resolution, include_subs=include_subs, ntmpl=ntmpl, cfmt=cfmt)
