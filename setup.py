@@ -7,7 +7,8 @@ setup(
     install_requires=[
         "requests>=2.25.1",
         "ffmpeg-python",
-        "colorama"
+        "colorama",
+        "rich"
     ],
     entry_points={
         "console_scripts": [

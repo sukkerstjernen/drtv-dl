@@ -11,6 +11,10 @@ from colorama import (
     Style, 
     init
 )
+from rich.table import Table
+from rich.console import Console
+from rich.text import Text
+from rich.box import SIMPLE_HEAVY
 
 if os.name == 'nt':
     init(autoreset=True)
@@ -116,7 +120,7 @@ def get_optimal_stream(parsed_m3u8_streams, desired_resolution, include_subs):
             if subtitles:
                 optimal_stream['subtitle'] = subtitles[-1]
             else:
-                raise StreamNotFoundError("No subtitles stream found")
+                print_to_screen("No subtitle stream found - discluding subtitles", level='warning')
 
         for stream in parsed_m3u8_streams['video']:
             if stream['resolution'].split('x')[1] == desired_resolution.replace('p', ''):
@@ -149,33 +153,48 @@ def get_optimal_format(formats):
     return preferred_formats[0]
 
 def print_formats(formats):
-    def format_row(columns, widths):
-        return " │ ".join([col.ljust(width) for col, width in zip(columns, widths)])
+    console = Console()
+    table = Table(show_header=True, header_style="bold white", box=SIMPLE_HEAVY)
 
-    data_rows = [["ID", "EXT", "FPS", "RESOLUTION", "TBR", "VBR", "VCODEC", "ACODEC", "PROTOCOL"]]
+    columns = [
+        ("ID", "white", "white", "left"), ("EXT", "white", "white", "center"),
+        ("FPS", "white", "white", "center"), ("RESOLUTION", "white", "white", "center"),
+        ("TBR", "white", "white", "center"), ("VBR", "white", "white", "center"),
+        ("VCODEC", "white", "white", "left"), ("ACODEC", "white", "white", "left"),
+        ("PROTOCOL", "white", "#d3d3d3", "center")
+    ]
 
-    for category, ext in [('audio', 'mp4'), ('subtitles', 'vtt'), ('video', 'mp4')]:
+    for name, cell_style, header_style, justify in columns:
+        table.add_column(name, style=cell_style, header_style=header_style, justify=justify)
+
+    styles = {"n/a": "grey70", 
+              "status_gray": "grey70", 
+              "ext_protocol": "white", 
+              "id": "white"}
+
+    def style_cell(cell):
+        cell_lower = cell.lower()
+        return Text(cell, style=styles.get(
+            "n/a" if cell_lower == "n/a" else 
+            "status_gray" if cell_lower in {"sub only", "audio only", "video only"} else 
+            "id"))
+
+    category_ext_map = {"audio": "mp4",
+                        "subtitles": "vtt",
+                        "video": "mp4"}
+
+    for category, ext in category_ext_map.items():
         for item in formats.get(category, []):
-            if category == 'audio':
-                row = [f"audio_{item['group-id']}-{item['name']}-{item['language']}", ext, "n/a", "audio only", 
-                       "n/a", "n/a", "audio only", item['codec'], "m3u8"]
-            elif category == 'subtitles':
-                row = [f"subs_{item['name']}-{item['language']}", ext, "n/a", "subtitles", 
-                       "n/a", "n/a", "sub only", f"subs only", "m3u8"]
-            else:  # video
-                row = [f"video_{item['bandwidth']}", ext, item['frame-rate'], item['resolution'], 
-                       f"{int(item['bandwidth']) // 1000}k", f"{int(item['average-bandwidth']) // 1000}k", 
-                       item['codec'], "video only", "m3u8"]
-            data_rows.append(row)
+            row = (
+                [f"audio_{item['group-id']}-{item['name']}-{item['language']}", ext, "n/a", "audio only", "n/a", "n/a", item.get('codec', 'n/a'), item.get('codec', 'n/a'), "m3u8"]
+                if category == 'audio' else
+                [f"subs_{item['name']}-{item['language']}", ext, "n/a", "subtitles", "n/a", "n/a", "subs only", "subs only", "m3u8"]
+                if category == 'subtitles' else
+                [f"video_{item['bandwidth']}", ext, item.get('frame-rate', 'n/a'), item.get('resolution', 'n/a'), f"{int(item.get('bandwidth', 0)) // 1000}k", f"{int(item.get('average-bandwidth', 0)) // 1000}k", item.get('codec', 'n/a'), "video only", "m3u8"]
+            )
+            table.add_row(*[style_cell(cell) for cell in row])
 
-    column_widths = [max(len(str(item)) for item in col) for col in zip(*data_rows)]
-    
-    print("\n" + "─" * (sum(column_widths) + 3 * (len(column_widths) - 1)))
-    for i, row in enumerate(data_rows):
-        print(format_row(row, column_widths))
-        if i == 0:
-            print("─" * (sum(column_widths) + 3 * (len(column_widths) - 1)))
-    print("─" * (sum(column_widths) + 3 * (len(column_widths) - 1)) + "\n")
+    console.print(table)
 
 
 def generate_filename(info, ntmpl):
