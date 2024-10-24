@@ -50,6 +50,15 @@ drtv_dl.download(
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+#### Desired features (ranked by priority)
+- [ ] Support for DR Lyd
+- [ ] Support for live content
+- [ ] Retry system for when a download fails
+- [ ] Downloading audio only or video only
+- [ ] Episode filtering to specify episodes when downloading a season/show
+- [ ] Download only a portion of an episode/movie
+
+
 ## License
 
 This project is licensed under the MIT License.
