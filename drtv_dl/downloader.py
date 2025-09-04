@@ -9,7 +9,6 @@ from drtv_dl.utils.progress_tracker import ProgressTracker
 from drtv_dl.utils.helpers import (
     generate_filename,
     download_webpage,
-    vtt_to_srt,
     get_optimal_format,
     get_optimal_stream,
     print_formats,
@@ -17,7 +16,7 @@ from drtv_dl.utils.helpers import (
     delete_files,
 )
 from drtv_dl.exceptions import (
-    DownloadError, 
+    DownloadError,
     MergeError
 )
 
@@ -32,7 +31,7 @@ class DRTVDownloader:
         if list_formats:
             print_formats(parsed_m3u8_streams)
             return
-        
+
         if self._check_if_downloaded(base_filename):
             return
 
@@ -59,18 +58,15 @@ class DRTVDownloader:
         if include_subs and optimal_stream['subtitle']:
             subtitle_url = optimal_stream['subtitle']['uri']
             vtt_filename = f"{base_filename}.vtt"
-            self._download_file(subtitle_url, vtt_filename, note=f"Subtitles saved as {vtt_filename}")
-            
-            srt_filename = f"{base_filename}.srt"
-            vtt_to_srt(vtt_filename, srt_filename)
-            os.remove(vtt_filename)
-            return srt_filename
-        
+            self._download_file(subtitle_url, vtt_filename,
+                        note=f"Subtitles saved as {vtt_filename}")
+            return vtt_filename
+
         return None
-    
+
     @staticmethod
     def _download_m3u8_manifest(stream_url):
-        print_to_screen(f"Downloading m3u8 manifest...")
+        print_to_screen("Downloading m3u8 manifest...")
         return download_webpage(
             url=stream_url
         )
@@ -86,22 +82,22 @@ class DRTVDownloader:
     def _download_file(url, filename, note):
         response = requests.get(url, stream=True, proxies=settings.PROXY)
         response.raise_for_status()
-        
+
         initial_size = response.headers.get('content-length', "?")
         if initial_size == "?":
             print_to_screen(f"Could not get content length - setting to '?'", level='warning')
         progress_tracker = ProgressTracker(initial_size, filename)
-        
+
         print_to_screen(f"Destination: {filename}")
         with open(filename, 'wb') as file:
             for chunk in response.iter_content(chunk_size=8192):
                 size = file.write(chunk)
                 progress_tracker.update(size)
-        
+
         progress_tracker.finish()
 
         print_to_screen(note)
-    
+
     @staticmethod
     def _merge_streams(info, video_filename, audio_filename, subtitle_filename, base_filename, cfmt):
         output_filename = f"{base_filename}.{cfmt}"
@@ -114,11 +110,11 @@ class DRTVDownloader:
         ).merge(note=f"{info['id']}: Merging streams into {output_filename}")
         if not result:
             raise MergeError(f"Failed to merge streams for {info['id']}")
-    
+
     @staticmethod
     def _cleanup(video_filename, audio_filename, subtitle_filename):
         delete_files(
-            video_filename, 
-            audio_filename, 
+            video_filename,
+            audio_filename,
             subtitle_filename
         )
