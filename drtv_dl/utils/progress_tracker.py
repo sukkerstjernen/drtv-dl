@@ -30,12 +30,13 @@ class ProgressTracker:
         unit, divisor = self.get_appropriate_unit(self.total_size)
         downloaded_unit = self.downloaded / divisor
         total_unit = "?" if self.total_size == "?" else self.total_size / divisor
-        
+
         elapsed_time = time.time() - self.start_time
         if elapsed_time > 0:
             dlspeed = self.downloaded / (elapsed_time * 1024 * 1024)
+            total_display = "?" if self.total_size == "?" else f"{total_unit:.2f}"
             percentage_done = "?" if self.total_size == "?" else f"{(downloaded_unit / total_unit) * 100:.0f}"
-            progress_line = f'\r {" " * 2}~ {downloaded_unit:.2f}/{total_unit:.2f} {unit} at {dlspeed:.2f} MB/s - {percentage_done}%'
+            progress_line = f'\r  ~ {downloaded_unit:.2f}/{total_display} {unit} at {dlspeed:.2f} MB/s - {percentage_done}%'
             padded_line = progress_line.ljust(self.longest_line)
             self.longest_line = max(self.longest_line, len(progress_line))
             print(padded_line, end='', file=sys.stderr, flush=True)
